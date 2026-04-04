@@ -5,6 +5,7 @@ from app.api.dependencies import get_db
 from app.db.models.app import App
 from app.schemas.app import AppCreate, AppResponse
 from app.services.docker_service import DockerService
+
 router = APIRouter(prefix="/apps", tags=["apps"])
 
 
@@ -30,6 +31,15 @@ def create_app(payload: AppCreate, db: Session = Depends(get_db)):
 def list_apps(db: Session = Depends(get_db)):
     return db.query(App).all()
 
+
+@router.get("/{app_id}", response_model=AppResponse)
+def get_app(app_id: int, db: Session = Depends(get_db)):
+    app = db.query(App).filter(App.id == app_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    return app
+
+
 @router.get("/{app_id}/logs")
 def get_app_logs(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
@@ -47,8 +57,9 @@ def get_app_logs(app_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to get logs: {str(e)}")
 
     return {"logs": logs}
-@router.post("/{app_id}/deploy", response_model=AppResponse)
 
+
+@router.post("/{app_id}/deploy", response_model=AppResponse)
 def deploy_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
     if not app:
@@ -81,6 +92,7 @@ def deploy_app(app_id: int, db: Session = Depends(get_db)):
 
     return app
 
+
 @router.post("/{app_id}/stop", response_model=AppResponse)
 def stop_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
@@ -103,6 +115,7 @@ def stop_app(app_id: int, db: Session = Depends(get_db)):
 
     return app
 
+
 @router.post("/{app_id}/remove", response_model=AppResponse)
 def remove_app_container(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
@@ -122,6 +135,52 @@ def remove_app_container(app_id: int, db: Session = Depends(get_db)):
     app.container_id = None
     app.assigned_port = None
     app.status = "created"
+
+    db.commit()
+    db.refresh(app)
+
+    return app
+
+
+@router.post("/{app_id}/start", response_model=AppResponse)
+def start_app(app_id: int, db: Session = Depends(get_db)):
+    app = db.query(App).filter(App.id == app_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+
+    if not app.container_id:
+        raise HTTPException(status_code=400, detail="App is not deployed")
+
+    docker_service = DockerService()
+
+    try:
+        docker_service.start_container(app.container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Start failed: {str(e)}")
+
+    app.status = "running"
+    db.commit()
+    db.refresh(app)
+
+    return app
+
+@router.post("/{app_id}/restart", response_model=AppResponse)
+def restart_app(app_id: int, db: Session = Depends(get_db)):
+    app = db.query(App).filter(App.id == app_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+
+    if not app.container_id:
+        raise HTTPException(status_code=400, detail="App is not deployed")
+
+    docker_service = DockerService()
+
+    try:
+        docker_service.restart_container(app.container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Restart failed: {str(e)}")
+
+    app.status = "running"
     db.commit()
     db.refresh(app)
 

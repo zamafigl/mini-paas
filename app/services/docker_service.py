@@ -22,6 +22,10 @@ class DockerService:
         )
         return container
 
+    def start_container(self, container_id: str) -> None:
+        container = self.client.containers.get(container_id)
+        container.start()
+
     def stop_container(self, container_id: str) -> None:
         container = self.client.containers.get(container_id)
         container.stop()
@@ -33,3 +37,6 @@ class DockerService:
     def get_logs(self, container_id: str) -> str:
         container = self.client.containers.get(container_id)
         return container.logs(tail=100).decode("utf-8")
+    def restart_container(self, container_id: str) -> None:
+        container = self.client.containers.get(container_id)
+        container.restart()
