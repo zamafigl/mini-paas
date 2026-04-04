@@ -1,5 +1,13 @@
+import redis
+from rq import Queue
+from worker.jobs import deploy_app_job
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+
+from app.db.models.deployment import Deployment
+from app.schemas.deployment import DeploymentResponse
+
 
 from app.api.dependencies import get_db
 from app.db.models.app import App
@@ -60,6 +68,7 @@ def get_app_logs(app_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{app_id}/deploy", response_model=AppResponse)
+@router.post("/{app_id}/deploy", response_model=AppResponse)
 def deploy_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
     if not app:
@@ -68,27 +77,14 @@ def deploy_app(app_id: int, db: Session = Depends(get_db)):
     if app.container_id:
         raise HTTPException(status_code=400, detail="App is already deployed")
 
-    docker_service = DockerService()
-    assigned_port = docker_service.get_free_port()
+    redis_conn = redis.Redis(host="redis", port=6379)
+    queue = Queue("default", connection=redis_conn)
 
-    safe_container_name = f"mini-paas-app-{app.id}"
-
-    try:
-        container = docker_service.run_container(
-            name=safe_container_name,
-            image=app.image,
-            internal_port=app.internal_port,
-            external_port=assigned_port,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Deploy failed: {str(e)}")
-
-    app.assigned_port = assigned_port
-    app.container_id = container.id
-    app.status = "running"
-
+    app.status = "deploying"
     db.commit()
     db.refresh(app)
+
+    queue.enqueue(deploy_app_job, app.id)
 
     return app
 
@@ -185,3 +181,25 @@ def restart_app(app_id: int, db: Session = Depends(get_db)):
     db.refresh(app)
 
     return app
+
+@router.get("/{app_id}/deployments", response_model=list[DeploymentResponse])
+def list_deployments(app_id: int, db: Session = Depends(get_db)):
+    app = db.query(App).filter(App.id == app_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+
+    deployments = (
+        db.query(Deployment)
+        .filter(Deployment.app_id == app_id)
+        .order_by(Deployment.id.desc())
+        .all()
+    )
+    return deployments
+
+@router.get("/{app_id}/deployments", response_model=list[DeploymentResponse])
+def list_deployments(app_id: int, db: Session = Depends(get_db)):
+	app = db.query(App).filter(App.id == app_id).first()
+	if not app:
+		raise HTTPException(status_code=404, detail="App not found")
+	deployments = (db.query(Deployment).filter(Deployment.app_id == app_id).order_by(Deployment.id.desc()).all())
+	return deployments

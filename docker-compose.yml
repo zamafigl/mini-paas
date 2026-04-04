@@ -13,9 +13,21 @@ services:
       - postgres
       - redis
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    depends_on:
+      - postgres
+      - redis
+
   postgres:
     image: postgres:16
-    container_name: mini-paas-postgres
     environment:
       POSTGRES_DB: mini_paas
       POSTGRES_USER: mini_paas
@@ -25,7 +37,6 @@ services:
 
   redis:
     image: redis:7
-    container_name: mini-paas-redis
 
 volumes:
   postgres_data:
