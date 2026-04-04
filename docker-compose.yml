@@ -1,11 +1,13 @@
 services:
   api:
     build: .
-    container_name: mini-paas-api
     ports:
       - "8081:8081"
     volumes:
       - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
     command: uvicorn app.main:app --host 0.0.0.0 --port 8081 --reload
     depends_on:
       - postgres
