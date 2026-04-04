@@ -66,20 +66,30 @@ curl -X POST http://localhost:8081/apps \
     "image": "nginx:latest",
     "internal_port": 80
   }'
+
+
+
 Get app
 curl http://localhost:8081/apps/1
+
 Deploy app
 curl -X POST http://localhost:8081/apps/1/deploy
+
 View logs
 curl http://localhost:8081/apps/1/logs
+
 Stop app
 curl -X POST http://localhost:8081/apps/1/stop
+
 Start app
 curl -X POST http://localhost:8081/apps/1/start
+
 Remove container
 curl -X POST http://localhost:8081/apps/1/remove
+
 Deployment history
 curl http://localhost:8081/apps/1/deployments
+
 Health checks
 curl http://localhost:8081/health
 curl http://localhost:8081/db-health
