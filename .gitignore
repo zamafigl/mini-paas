@@ -1,24 +1,14 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual env
 venv/
 .venv/
 
-# Environment variables
+__pycache__/
+*.pyc
+
+.pytest_cache/
+
 .env
 .env.*
 
-# IDE
-.vscode/
-.idea/
+test.db
 
-# Logs
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
+nginx/dynamic/

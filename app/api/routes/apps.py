@@ -4,10 +4,8 @@ from worker.jobs import deploy_app_job
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-
 from app.db.models.deployment import Deployment
 from app.schemas.deployment import DeploymentResponse
-
 
 from app.api.dependencies import get_db
 from app.db.models.app import App
@@ -68,7 +66,6 @@ def get_app_logs(app_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{app_id}/deploy", response_model=AppResponse)
-@router.post("/{app_id}/deploy", response_model=AppResponse)
 def deploy_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
     if not app:
@@ -125,6 +122,8 @@ def remove_app_container(app_id: int, db: Session = Depends(get_db)):
 
     try:
         docker_service.remove_container(app.container_id)
+        docker_service.remove_nginx_route(app.id)
+        docker_service.reload_nginx()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Remove failed: {str(e)}")
 
@@ -160,6 +159,7 @@ def start_app(app_id: int, db: Session = Depends(get_db)):
 
     return app
 
+
 @router.post("/{app_id}/restart", response_model=AppResponse)
 def restart_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
@@ -182,6 +182,7 @@ def restart_app(app_id: int, db: Session = Depends(get_db)):
 
     return app
 
+
 @router.get("/{app_id}/deployments", response_model=list[DeploymentResponse])
 def list_deployments(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
@@ -195,11 +196,3 @@ def list_deployments(app_id: int, db: Session = Depends(get_db)):
         .all()
     )
     return deployments
-
-@router.get("/{app_id}/deployments", response_model=list[DeploymentResponse])
-def list_deployments(app_id: int, db: Session = Depends(get_db)):
-	app = db.query(App).filter(App.id == app_id).first()
-	if not app:
-		raise HTTPException(status_code=404, detail="App not found")
-	deployments = (db.query(Deployment).filter(Deployment.app_id == app_id).order_by(Deployment.id.desc()).all())
-	return deployments

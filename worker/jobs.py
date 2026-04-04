@@ -45,6 +45,13 @@ def deploy_app_job(app_id: int) -> None:
             external_port=assigned_port,
         )
 
+        docker_service.write_nginx_route(
+            app_id=app.id,
+            container_name=safe_container_name,
+            internal_port=app.internal_port,
+        )
+        docker_service.reload_nginx()
+
         app.assigned_port = assigned_port
         app.container_id = container.id
         app.status = "running"

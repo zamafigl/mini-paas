@@ -7,7 +7,11 @@ services:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+      PYTHONPATH: "/app"
+      DOCKER_NETWORK: "mini-paas_default"
+      NGINX_CONTAINER_NAME: "mini-paas-nginx"
+      NGINX_DYNAMIC_DIR: "/app/nginx/dynamic"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8081 --reload
     depends_on:
       - postgres
@@ -21,7 +25,11 @@ services:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+      PYTHONPATH: "/app"
+      DOCKER_NETWORK: "mini-paas_default"
+      NGINX_CONTAINER_NAME: "mini-paas-nginx"
+      NGINX_DYNAMIC_DIR: "/app/nginx/dynamic"
     depends_on:
       - postgres
       - redis
@@ -29,14 +37,25 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: mini_paas
-      POSTGRES_USER: mini_paas
-      POSTGRES_PASSWORD: mini_paas
+      POSTGRES_DB: "mini_paas"
+      POSTGRES_USER: "mini_paas"
+      POSTGRES_PASSWORD: "mini_paas"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7
+
+  nginx:
+    image: nginx:latest
+    container_name: mini-paas-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/dynamic:/etc/nginx/dynamic
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
