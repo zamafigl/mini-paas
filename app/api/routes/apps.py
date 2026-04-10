@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models.deployment import Deployment
 from app.schemas.deployment import DeploymentResponse
+from app.core.config import settings
 
 from app.api.dependencies import get_db
 from app.db.models.app import App
@@ -74,18 +75,18 @@ def deploy_app(app_id: int, db: Session = Depends(get_db)):
     if app.container_id:
         raise HTTPException(status_code=400, detail="App is already deployed")
 
-    redis_conn = redis.Redis(host="redis", port=6379)
+    if app.status == "deploying":
+        raise HTTPException(status_code=400, detail="App deployment is already in progress")
+
+    redis_conn = redis.Redis.from_url(settings.redis_url)
     queue = Queue("default", connection=redis_conn)
 
     app.status = "deploying"
     db.commit()
     db.refresh(app)
 
-    queue.enqueue(deploy_app_job, app.id)
-
+    queue.enqueue(deploy_app_job, app.id, job_timeout=300)
     return app
-
-
 @router.post("/{app_id}/stop", response_model=AppResponse)
 def stop_app(app_id: int, db: Session = Depends(get_db)):
     app = db.query(App).filter(App.id == app_id).first()
