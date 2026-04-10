@@ -82,6 +82,7 @@ The worker updates application state and deployment history in PostgreSQL.
 A dynamic Nginx route is generated for the deployed application.
 The application becomes accessible through /apps/{id}/.
 Project Structure
+```text
 mini-paas/
 ├── app/
 │   ├── api/
@@ -112,7 +113,7 @@ mini-paas/
 ├── Makefile
 ├── requirements.txt
 └── README.md
-
+```
 
 ## Quick Start
 1. Clone the repository
@@ -143,7 +144,7 @@ Nginx is exposed on port 80, and the API container is exposed on port 8081.
 Environment Variables
 
 Example .env.example:
-
+```text
 APP_NAME=mini-paas
 APP_HOST=0.0.0.0
 APP_PORT=8081
@@ -162,8 +163,10 @@ REDIS_DB=0
 DOCKER_NETWORK=mini-paas_default
 NGINX_CONTAINER_NAME=mini-paas-nginx
 NGINX_DYNAMIC_DIR=/app/nginx/dynamic
-API Examples
+```
+## API Examples
 Create an app
+```
 curl -X POST http://localhost:8081/apps \
   -H "Content-Type: application/json" \
   -d '{
@@ -171,28 +174,21 @@ curl -X POST http://localhost:8081/apps \
     "image": "nginx:latest",
     "internal_port": 80
   }'
-List apps
-curl http://localhost:8081/apps
-Get app by id
-curl http://localhost:8081/apps/1
-Deploy app
-curl -X POST http://localhost:8081/apps/1/deploy
-View logs
-curl http://localhost:8081/apps/1/logs
-Stop app
-curl -X POST http://localhost:8081/apps/1/stop
-Start app
-curl -X POST http://localhost:8081/apps/1/start
-Restart app
-curl -X POST http://localhost:8081/apps/1/restart
-Remove deployed container
-curl -X POST http://localhost:8081/apps/1/remove
-Deployment history
-curl http://localhost:8081/apps/1/deployments
-Health checks
-curl http://localhost:8081/health
-curl http://localhost:8081/db-health
-Makefile Commands
+```  
+**List apps**
+``` curl http://localhost:8081/apps ```\
+**Get app by id** ```curl http://localhost:8081/apps/1```\
+**Deploy app** ```curl -X POST http://localhost:8081/apps/1/deploy```\
+**View logs** ```curl http://localhost:8081/apps/1/logs```\
+**Stop app** ```curl -X POST http://localhost:8081/apps/1/stop```\
+**Start app** ```curl -X POST http://localhost:8081/apps/1/start```\
+**Restart app** ```curl -X POST http://localhost:8081/apps/1/restart```\
+**Remove deployed container** ```curl -X POST http://localhost:8081/apps/1/remove```\
+**Deployment history** ```curl http://localhost:8081/apps/1/deployments```\
+**Health checks** ```curl http://localhost:8081/health```\
+
+**Makefile Commands**
+```
 Runtime
 make up
 make down
@@ -210,7 +206,8 @@ make migrate-create m="add new field"
 Shell access
 make shell-api
 make shell-worker
-Database Migrations
+```
+## Database Migrations
 
 This project uses Alembic for schema management.
 
@@ -236,55 +233,56 @@ docker compose exec -e PYTHONPATH=/app api pytest -v
 
 The test suite currently focuses on:
 
-application CRUD
-deployment endpoint behavior
-lifecycle endpoints
-logs endpoint
-deployment history endpoint
-Design Decisions
-Asynchronous deployment flow
+application CRUD\
+deployment endpoint behavior\
+lifecycle endpoints\
+logs endpoint\
+deployment history endpoint\
+Design Decisions\
+Asynchronous deployment flow\
 The API does not deploy containers directly. It enqueues a job in Redis, and the worker performs the deployment.
-Separated responsibilities
+Separated responsibilities\
 FastAPI handles API requests, PostgreSQL stores state, Redis buffers jobs, and the worker communicates with Docker.
-Dynamic Nginx routing
-For each deployed app, a route config is generated dynamically and Nginx is reloaded.
-Single-host scope
-This project is intentionally designed as a lightweight single-node platform rather than a production-grade orchestrator.
-State tracking through database records
-Application status and deployment history are persisted in PostgreSQL so lifecycle operations can be observed and queried.
-Current Limitations
-no authentication
-no multi-user support
-no resource quotas
-single-host deployment only
+Dynamic Nginx routing\
+For each deployed app, a route config is generated dynamically and Nginx is reloaded.\
+Single-host scope\
+This project is intentionally designed as a lightweight single-node platform rather than a production-grade orchestrator.\
+State tracking through database records\
+Application status and deployment history are persisted in PostgreSQL so lifecycle operations can be observed and queried.\
+Current Limitations\
+no authentication\
+no multi-user support\
+no resource quotas\
+single-host deployment only\
 limited worker/integration coverage compared with a full production platform
 Nginx reload strategy is simple and not optimized for high-scale scenarios
 no rollback support yet
-Roadmap
-authentication and role-based access
-resource limits / quotas
-rollback support
-deployment retries and backoff
-richer worker and integration test coverage
-metrics and observability
-better deployment failure diagnostics
-image validation / safer deployment policies
-Why This Project Matters
+## Roadmap
+authentication and role-based access\
+resource limits / quotas\
+rollback support\
+deployment retries and backoff\
+richer worker and integration test coverage\
+metrics and observability\
+better deployment failure diagnostics\
+image validation / safer deployment policies\
+
+## Why This Project Matters
 
 This repository is meant to demonstrate more than CRUD.
 
 It shows:
 
-API design with FastAPI
-relational data modeling with SQLAlchemy
-asynchronous job execution with Redis + RQ
-Docker container lifecycle automation
-reverse proxy integration with Nginx
-database schema versioning with Alembic
-project packaging and testability
+**API design with FastAPI**\
+**relational data modeling with SQLAlchemy**\
+**asynchronous job execution with Redis + RQ**\
+**Docker container lifecycle automation**\
+**reverse proxy integration with Nginx**\
+**database schema versioning with Alembic**\
+**project packaging and testability**
 
 In other words, it is a backend/infrastructure project with a platform engineering flavor.
 
-License
+## License
 
-This project is provided for educational and portfolio purposes.
+**This project is provided for educational and portfolio purposes.**
