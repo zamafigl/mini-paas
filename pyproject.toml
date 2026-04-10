@@ -1,0 +1,10 @@
+[project]
+name = "mini-paas"
+version = "0.1.0"
+description = "Mini self-hosted PaaS platform with FastAPI, Docker, Redis, PostgreSQL and Nginx"
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
