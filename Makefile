@@ -25,3 +25,14 @@ shell-api:
 
 shell-worker:
 	docker compose exec worker bash
+migrate-up:
+	docker compose run --rm api alembic upgrade head
+
+migrate-stamp:
+	docker compose run --rm api alembic stamp head
+
+migrate-current:
+	docker compose run --rm api alembic current
+
+migrate-create:
+	docker compose run --rm api alembic revision --autogenerate -m "$(m)"

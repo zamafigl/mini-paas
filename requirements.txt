@@ -9,3 +9,4 @@ rq
 redis
 pytest
 httpx
+alembic
