@@ -67,7 +67,13 @@ FastAPI API
   |--------------------> Redis queue ---> Worker ---> Docker SDK ---> Containers
                                                    |
                                                    +--> dynamic Nginx route generation
-How It Works
+```
+
+
+--- 
+
+## How It Works
+
 A user creates an application record through the API.
 A deployment request is sent to the API.
 The API enqueues a deployment job into Redis.
@@ -106,7 +112,9 @@ mini-paas/
 ├── Makefile
 ├── requirements.txt
 └── README.md
-Quick Start
+
+
+## Quick Start
 1. Clone the repository
 git clone https://github.com/zamafigl/mini-paas.git
 cd mini-paas
