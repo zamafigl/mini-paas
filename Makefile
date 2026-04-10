@@ -15,16 +15,17 @@ ps:
 	docker compose ps
 
 test:
-	docker compose exec -e PYTHONPATH=/app api pytest -v
+	docker compose run --rm -e PYTHONPATH=/app api pytest -v
 
 test-deployments:
-	docker compose exec -e PYTHONPATH=/app api pytest -v tests/test_deployments.py
+	docker compose run --rm -e PYTHONPATH=/app api pytest -v tests/test_deployments.py
 
 shell-api:
 	docker compose exec api bash
 
 shell-worker:
 	docker compose exec worker bash
+
 migrate-up:
 	docker compose run --rm api alembic upgrade head
 
